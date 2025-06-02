@@ -1520,3 +1520,15 @@ zetachain_7000-1:
     - upgrade
     - uptime
     - voteindexer
+zig-test-2:
+  chain_name: zigchain
+  protocol_type: cosmos
+  mainnet: false
+  support_asset:
+    denom: uzig
+    decimal: 6
+  packages:
+    - block
+    - upgrade
+    - uptime
+    - voteindexer
