@@ -1,0 +1,153 @@
+name: cvms
+
+on:
+  workflow_dispatch:
+    branches:
+      - deployment/kubernetes
+    inputs:
+      environment:
+        type: choice
+        description: Environment where to deploy
+        options:
+        - testnet
+
+concurrency:
+  # Cancel old runs if there is a new commit in the same branch
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  # Needed to configure aws credentials step
+  id-token: write
+  contents: read
+
+jobs:
+  initial:
+    name: Initial
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      ENV: ${{ steps.env-vars.outputs.ENV }}
+      TAG: ${{ steps.env-vars.outputs.TAG }}
+      NOW: ${{ steps.env-vars.outputs.NOW }}
+
+    steps:
+      # Define global vars that will be used through the pipeline
+      - name: Defining global vars
+        shell: bash
+        id: env-vars
+        run: |
+          echo "ENV=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          echo "TAG=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+          echo "NOW=$(TZ=':Europe/Madrid' date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_OUTPUT
+
+      # Checkout repository under $GITHUB_WORKSPACE path
+      - name: Repository checkout
+        uses: actions/checkout@v4
+
+      # Send initial Slack deployment message
+      - name: 📬 Initial Slack deployment message
+        shell: bash
+        env:
+          ENV: ${{ steps.env-vars.outputs.ENV }}
+          TAG: ${{ steps.env-vars.outputs.TAG }}
+          NOW: ${{ steps.env-vars.outputs.NOW }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "Send initial Slack message"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🎬 Starting *CVMS* deployment in *${ENV}* environment - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: initial
+
+    steps:
+    # Checkout repository under $GITHUB_WORKSPACE path
+      - name: Respository checkout
+        uses: actions/checkout@v4
+
+      # Assume gitHubdeploymentsRole AWS role
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::291847425310:role/gitHubDeploymentsRole
+          role-session-name: deploymentsRole
+          role-duration-seconds: 900
+          aws-region: us-east-1
+
+      # Kubectl and Helm install
+      - name: Kubectl and Helm install
+        shell: bash
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          KUBE_VERSION: v1.31.0
+          HELM_VERSION: v3.12.2
+        run: |
+          curl -Ls https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl -o kubectl && chmod +x kubectl && mv kubectl /usr/local/bin/kubectl
+          curl -Ls https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz && tar -xzf helm-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/helm
+          echo ${KUBECONFIG} | base64 --decode > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+          echo ${GITHUB_WORKSPACE}
+          echo "KUBECONFIG=${GITHUB_WORKSPACE}/kubeconfig.yaml" >> $GITHUB_ENV
+
+      # CVMS deployment
+      - name: CVMS deployment
+        working-directory: ./helm
+        shell: bash
+        env:
+          ENV: ${{ needs.initial.outputs.ENV }}
+          TAG: ${{ needs.initial.outputs.TAG }}
+          NOW: ${{ needs.initial.outputs.NOW }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          pwd
+          kubectl config use-context peersyst-${ENV}
+          #envsubst < Chart.yaml > Chart-${ENV}.yaml
+          #mv Chart-${ENV}.yaml Chart.yaml
+          #secs=0
+          #while [[ "$(helm -n blockchain history ${SERVICE} | awk 'END{print}' | awk '{print $7}')" != "deployed" && $secs -lt 105 ]]; do
+          #  echo "Already exist one ${ENV} deployment for ${SERVICE} in progress. Please wait..."
+          #  sleep 1
+          #  secs=$((secs+1))
+          #  echo ${secs}
+          #done
+          sleep 3
+          echo "Deploying CVMS in ${ENV}..."
+          helm -n cvms upgrade cvms ./ --install --atomic --values values-${ENV}.yaml --set-string timestamp=${NOW} --set-string tag=${TAG} --debug
+
+      # Send Slack message if any previous step has failed in this job
+      - name: Failure job notification
+        if: ${{ failure() }}
+        shell: bash
+        env:
+          ENV: ${{ needs.initial.outputs.ENV }}
+          TAG: ${{ needs.initial.outputs.TAG }}
+          NOW: ${{ needs.initial.outputs.NOW }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "Send error Slack message"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"❌ *CVMS* ${GITHUB_JOB} job *FAILED* in *${ENV}*. Check pipeline logs <https://github.com/Peersyst/cvms/actions/runs/${GITHUB_RUN_ID}|here> - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+
+  final:
+    name: 🏁 Final
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    needs: [initial, deploy]
+    if: |
+      always() &&
+      !contains(join(needs.*.result, ','), 'failure')
+
+    steps:
+      # Send final Slack deployment message
+      - name: 📬 Final Slack deployment message
+        shell: bash
+        env:
+          ENV: ${{ needs.initial.outputs.ENV }}
+          TAG: ${{ needs.initial.outputs.TAG }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "Send final Slack message"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🏁 *CVMS* deployment in *${ENV}* environment *SUCCESSFULLY* - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}

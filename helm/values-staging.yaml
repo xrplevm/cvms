@@ -8,7 +8,7 @@ nameOverride: ""
 
 fullnameOverride: ""
 
-namespaceOverride: ""
+namespaceOverride: "cvms"
 
 # For devents, testnets, localnet even if unsupported mainnets, Use custom_chains.yaml.example for CVMS
 # Edit custom chains at helm/files/custom_chains.yaml.example
@@ -31,19 +31,17 @@ cvmsConfig:
   #   ex) monikers: ['Cosmostation1', 'Cosmostation2']
   #   des) This will enable validator mode for whitelisted specific validators
   # Example reference: https://github.com/cosmostation/cvms/blob/develop/docs/setup.md
-  monikers: []
-  chains: []
-  # - display_name: 'cosmos'
-  #   # NOTE: chain_id is a key for support_chains list. YOU SHOULD match correct CHAIN ID
-  #   chain_id: cosmoshub-4
-  #   # NOTE: these addresses will be used for balance usage tracking such as validator, broadcaster or something.
-  #   tracking_addresses:
-  #     - 'cosmos1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep4tgu9q'
-  #   nodes:
-  #     # NOTE: currently grpc endpoint doesn't support ssl
-  #     - rpc: 'https://rpc-cosmos.endpoint.xyz'
-  #       api: 'https://lcd-cosmos.endpoint.xyz'
-  #       grpc: 'grpc-cosmos.endpoint.xyz:9090'
+  monikers: ["all"]
+  chains:
+    # NOTE: display name will be used only this config to indicate followed arguments to communicate internal team members
+    - display_name: "xrpl-evm"
+      # NOTE: chain_id is a KEY to find applicable packages in support_chains list. YOU SHOULD MATCH CORRECT CHAIN ID!
+      chain_id: xrplevm_1449000-1
+      nodes:
+        # NOTE: currently grpc endpoint doesn't support ssl
+        - rpc: "http://cosmos.testnet.xrplevm.org:26657"
+          api: "http://cosmos.testnet.xrplevm.org:1317"
+          grpc: "http://cosmos.testnet.xrplevm.org:9090"
 
 indexer:
   replicaCount: 1
@@ -74,14 +72,15 @@ indexer:
 
   podAnnotations: {}
   # Do not change these keys that are already defined
-  # app.kubernetes.io/instance: 
-  # app.kubernetes.io/managed-by: 
+  # app.kubernetes.io/instance:
+  # app.kubernetes.io/managed-by:
   # app.kubernetes.io/name:
   # app.kubernetes.io/version:
   # argocd.argoproj.io/instance:
   # helm.sh/chart:
-  podLabels: {}
-    # app.kubernetes.io/name: 
+  podLabels:
+    {}
+    # app.kubernetes.io/name:
     # app.kubernetes.io/branch-of:
 
   podSecurityContext:
@@ -94,7 +93,7 @@ indexer:
     yamlSyntax:
       capabilities:
         drop:
-        - ALL
+          - ALL
       readOnlyRootFilesystem: true
       runAsNonRoot: true
       runAsUser: 1000
@@ -195,7 +194,8 @@ indexer:
     # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
     metricRelabelings: []
     # -- Prometheus ServiceMonitor selector
-    selector: {}
+    selector:
+      {}
       # prometheus: kube-prometheus
 
     # -- Prometheus ServiceMonitor scheme
@@ -203,14 +203,14 @@ indexer:
     # -- Prometheus ServiceMonitor tlsConfig
     tlsConfig: {}
     # -- Prometheus ServiceMonitor namespace
-    namespace: ""  # monitoring
+    namespace: "" # monitoring
     # -- Prometheus ServiceMonitor labels
     additionalLabels: {}
     # -- Prometheus ServiceMonitor annotations
     annotations: {}
 
   initContainers:
-    enabled: true  # Set to false if you want to disable the init-schema container
+    enabled: true # Set to false if you want to disable the init-schema container
     containers:
       - name: init-schema
         image: docker.io/alpine:latest
@@ -246,7 +246,8 @@ exporter:
     - "4"
     - --port=9200
 
-  env: {}
+  env:
+    {}
     # DB_HOST: localhost
     # DB_PORT: "5432"
 
@@ -255,14 +256,15 @@ exporter:
 
   podAnnotations: {}
   # Do not change these keys that are already defined
-  # app.kubernetes.io/instance: 
-  # app.kubernetes.io/managed-by: 
+  # app.kubernetes.io/instance:
+  # app.kubernetes.io/managed-by:
   # app.kubernetes.io/name:
   # app.kubernetes.io/version:
   # argocd.argoproj.io/instance:
   # helm.sh/chart:
-  podLabels: {}
-    # app.kubernetes.io/name: 
+  podLabels:
+    {}
+    # app.kubernetes.io/name:
     # app.kubernetes.io/branch-of:
 
   podSecurityContext:
@@ -275,7 +277,7 @@ exporter:
     yamlSyntax:
       capabilities:
         drop:
-        - ALL
+          - ALL
       readOnlyRootFilesystem: true
       runAsNonRoot: true
       runAsUser: 1000
@@ -372,7 +374,8 @@ exporter:
     # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
     metricRelabelings: []
     # -- Prometheus ServiceMonitor selector
-    selector: {}
+    selector:
+      {}
       # prometheus: kube-prometheus
 
     # -- Prometheus ServiceMonitor scheme
@@ -380,7 +383,7 @@ exporter:
     # -- Prometheus ServiceMonitor tlsConfig
     tlsConfig: {}
     # -- Prometheus ServiceMonitor namespace
-    namespace: ""  # monitoring
+    namespace: "" # monitoring
     # -- Prometheus ServiceMonitor labels
     additionalLabels: {}
     # -- Prometheus ServiceMonitor annotations
@@ -416,10 +419,11 @@ exporter:
           enabled: false
         - name: yoda
           enabled: true
-      rules: []
+      rules:
+        []
         # - alert: IncreasingMissCounterOver30%During1h
         #   expr: |
-        #     # 30mins ago, the validator is unjailed. but got jailed 
+        #     # 30mins ago, the validator is unjailed. but got jailed
         #     cvms_uptime_jailed - cvms_uptime_jailed offset 30m > 0 and (cvms_uptime_jailed offset 30m == 0)
         #   labels:
         #     severity: critical
