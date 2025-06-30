@@ -22,7 +22,6 @@ jobs:
     secrets: inherit
     with:
       push: true
-      target: production
   deploy:
     needs: build-cvms
     uses: ./.github/workflows/deploy.yaml
