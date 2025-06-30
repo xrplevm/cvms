@@ -11,6 +11,11 @@ on:
         options:
         - testnet
 
+permissions:
+  # Needed to configure aws credentials step
+  id-token: write
+  contents: read
+
 concurrency:
   # Cancel old runs if there is a new commit in the same branch
   group: ${{ github.workflow }}-${{ github.ref }}
