@@ -55,7 +55,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send initial Slack message"
-          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🎬 Starting *CVMS* deployment in *${ENV}* environment - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🎬 Starting *CVMS* deployment in *${ENV}* environment - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
 
   deploy:
     name: Deploy
@@ -129,7 +129,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send error Slack message"
-          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"❌ *CVMS* ${GITHUB_JOB} job *FAILED* in *${ENV}*. Check pipeline logs <https://github.com/Peersyst/cvms/actions/runs/${GITHUB_RUN_ID}|here> - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"❌ *CVMS* ${GITHUB_JOB} job *FAILED* in *${ENV}*. Check pipeline logs <https://github.com/xrplevm/cvms/actions/runs/${GITHUB_RUN_ID}|here> - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
 
   final:
     name: 🏁 Final
@@ -150,4 +150,4 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send final Slack message"
-          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🏁 *CVMS* deployment in *${ENV}* environment *SUCCESSFULLY* - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🏁 *CVMS* deployment in *${ENV}* environment *SUCCESSFULLY* - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
