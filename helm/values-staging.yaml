@@ -8,7 +8,7 @@ nameOverride: ""
 
 fullnameOverride: ""
 
-namespaceOverride: ""
+namespaceOverride: "cvms"
 
 # For devents, testnets, localnet even if unsupported mainnets, Use custom_chains.yaml.example for CVMS
 # Edit custom chains at helm/files/custom_chains.yaml.example
