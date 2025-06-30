@@ -1,4 +1,4 @@
-name: cvms
+name: CVMS Deploy
 
 on:
   workflow_dispatch:
@@ -116,6 +116,7 @@ jobs:
           #done
           sleep 3
           echo "Deploying CVMS in ${ENV}..."
+          helm dependency build
           helm -n cvms upgrade cvms ./ --install --atomic --values values-${ENV}.yaml --set-string timestamp=${NOW} --set-string tag=${TAG} --debug
 
       # Send Slack message if any previous step has failed in this job
