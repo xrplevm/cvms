@@ -1,15 +1,7 @@
 name: CVMS Deploy
 
 on:
-  workflow_dispatch:
-    branches:
-      - deployment/kubernetes
-    inputs:
-      environment:
-        type: choice
-        description: Environment where to deploy
-        options:
-        - testnet
+  workflow_call:
 
 concurrency:
   # Cancel old runs if there is a new commit in the same branch

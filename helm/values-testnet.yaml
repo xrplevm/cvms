@@ -47,7 +47,7 @@ indexer:
   replicaCount: 1
 
   image:
-    repository: cosmostation/cvms
+    repository: 291847425310.dkr.ecr.us-east-1.amazonaws.com/peersyst/cvms
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
@@ -229,7 +229,7 @@ exporter:
   replicaCount: 1
 
   image:
-    repository: cosmostation/cvms
+    repository: 291847425310.dkr.ecr.us-east-1.amazonaws.com/peersyst/cvms
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
