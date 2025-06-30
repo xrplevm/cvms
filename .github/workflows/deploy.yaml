@@ -1,15 +1,7 @@
-name: cvms
+name: CVMS Deploy
 
 on:
-  workflow_dispatch:
-    branches:
-      - deployment/kubernetes
-    inputs:
-      environment:
-        type: choice
-        description: Environment where to deploy
-        options:
-        - testnet
+  workflow_call:
 
 concurrency:
   # Cancel old runs if there is a new commit in the same branch
@@ -55,7 +47,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send initial Slack message"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🎬 Starting *CVMS* deployment in *${ENV}* environment - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🎬 Starting *CVMS* deployment in *${ENV}* environment - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
 
   deploy:
     name: Deploy
@@ -116,6 +108,7 @@ jobs:
           #done
           sleep 3
           echo "Deploying CVMS in ${ENV}..."
+          helm dependency build
           helm -n cvms upgrade cvms ./ --install --atomic --values values-${ENV}.yaml --set-string timestamp=${NOW} --set-string tag=${TAG} --debug
 
       # Send Slack message if any previous step has failed in this job
@@ -129,7 +122,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send error Slack message"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"❌ *CVMS* ${GITHUB_JOB} job *FAILED* in *${ENV}*. Check pipeline logs <https://github.com/Peersyst/cvms/actions/runs/${GITHUB_RUN_ID}|here> - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"❌ *CVMS* ${GITHUB_JOB} job *FAILED* in *${ENV}*. Check pipeline logs <https://github.com/xrplevm/cvms/actions/runs/${GITHUB_RUN_ID}|here> - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
 
   final:
     name: 🏁 Final
@@ -150,4 +143,4 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Send final Slack message"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🏁 *CVMS* deployment in *${ENV}* environment *SUCCESSFULLY* - Commit: <https://github.com/Peersyst/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}
+          #curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"🏁 *CVMS* deployment in *${ENV}* environment *SUCCESSFULLY* - Commit: <https://github.com/xrplevm/cvms/commit/${TAG}|${TAG}> by ${GITHUB_ACTOR}\"}" ${SLACK_WEBHOOK_URL}

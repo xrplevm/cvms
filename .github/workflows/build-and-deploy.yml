@@ -1,0 +1,29 @@
+name: "CVMS Build and deploy"
+
+on:
+  workflow_dispatch:
+    branches:
+      - deployment/kubernetes
+    inputs:
+      environment:
+        type: choice
+        description: Environment where to deploy
+        options:
+        - testnet
+
+concurrency:
+  # Cancel old runs if there is a new commit in the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-cvms:
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+    with:
+      push: true
+      target: production
+  deploy:
+    needs: build-cvms
+    uses: ./.github/workflows/deploy.yaml
+    secrets: inherit
